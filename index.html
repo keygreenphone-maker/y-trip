@@ -77,12 +77,24 @@
   .reset-btn:active{transform:scale(.97);}
 
   .category{ background:var(--paper); border:1px solid var(--line); border-radius:12px; margin-bottom:12px; overflow:hidden; }
-  .cat-head{ display:flex; align-items:center; justify-content:space-between; padding:13px 15px; cursor:pointer; user-select:none; }
-  .cat-title{ display:flex; align-items:center; gap:9px; font-size:14.5px; font-weight:700; color:var(--ink); }
+  .cat-head{ display:flex; align-items:center; justify-content:space-between; padding:13px 15px; cursor:pointer; user-select:none; gap:8px; }
+  .cat-title{ display:flex; align-items:center; gap:9px; font-size:14.5px; font-weight:700; color:var(--ink); flex:1; min-width:0; }
+  .cat-title span.txt{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; cursor:text; }
+  .cat-title-input{
+    flex:1; font-size:14.5px; font-weight:700; color:var(--ink); font-family:inherit;
+    border:1px solid var(--teal); border-radius:6px; padding:3px 6px; background:#fff; min-width:0;
+  }
   .cat-dot{ width:7px;height:7px;border-radius:50%; background:var(--coral); flex:none; }
-  .cat-count{ font-size:12px; color:var(--ink-soft); font-family:Consolas,Menlo,monospace; }
-  .cat-chev{ font-size:11px; color:var(--ink-soft); transition:transform .15s ease; }
+  .cat-count{ font-size:12px; color:var(--ink-soft); font-family:Consolas,Menlo,monospace; flex:none; }
+  .cat-chev{ font-size:11px; color:var(--ink-soft); transition:transform .15s ease; flex:none; }
   .cat-head.open .cat-chev{transform:rotate(180deg);}
+  .cat-actions{ display:flex; align-items:center; gap:2px; flex:none; }
+  .cat-btn{
+    flex:none; width:24px; height:24px; border-radius:6px; border:none; background:transparent;
+    color:var(--ink-soft); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:13px;
+  }
+  .cat-btn:hover{ background:var(--sand-deep); }
+  .cat-btn.del:hover{ color:var(--coral-deep); }
 
   .cat-bar{ height:3px; background:var(--sand-deep); }
   .cat-bar-fill{ height:100%; background:var(--teal); width:0%; transition:width .2s ease; }
@@ -158,7 +170,12 @@
 
   <div id="categories"></div>
 
-  <p class="foot-note">항목을 눌러 텍스트를 바로 수정하거나, ✕ 로 삭제할 수 있어요.<br/>체크·수정 내용은 이 브라우저에 자동 저장돼요.<br/>제2여객터미널(T2) · 예약번호 6454HG0035</p>
+  <div class="add-row" style="margin:0 2px 18px;">
+    <input class="add-input" id="newCatInput" placeholder="새 대분류 추가... (예: 기념품)" />
+    <button class="add-btn" id="newCatBtn">대분류 추가</button>
+  </div>
+
+  <p class="foot-note">항목 · 대분류 제목을 눌러 바로 수정하거나, ✕ 로 삭제할 수 있어요.<br/>체크·수정 내용은 이 브라우저에 자동 저장돼요.<br/>제2여객터미널(T2) · 예약번호 6454HG0035</p>
 
 </div>
 
@@ -257,12 +274,42 @@ function render(){
 
     const head = document.createElement("div");
     head.className = "cat-head open";
-    head.innerHTML = `
-      <div class="cat-title"><span class="cat-dot"></span>${cat.title}</div>
-      <div style="display:flex;align-items:center;gap:8px;">
-        <span class="cat-count">${catDone}/${cat.items.length}</span>
-        <span class="cat-chev">▾</span>
-      </div>`;
+
+    const titleWrap = document.createElement("div");
+    titleWrap.className = "cat-title";
+    titleWrap.innerHTML = `<span class="cat-dot"></span><span class="txt">${cat.title}</span>`;
+    titleWrap.querySelector(".txt").addEventListener("click", (e)=>{
+      e.stopPropagation();
+      startEditCategory(cat.id);
+    });
+    head.appendChild(titleWrap);
+
+    const right = document.createElement("div");
+    right.style.cssText = "display:flex;align-items:center;gap:6px;";
+    right.innerHTML = `<span class="cat-count">${catDone}/${cat.items.length}</span>`;
+
+    const actions = document.createElement("div");
+    actions.className = "cat-actions";
+    const catEditBtn = document.createElement("button");
+    catEditBtn.className = "cat-btn";
+    catEditBtn.setAttribute("aria-label","대분류 수정");
+    catEditBtn.textContent = "✎";
+    catEditBtn.addEventListener("click", (e)=>{ e.stopPropagation(); startEditCategory(cat.id); });
+    const catDelBtn = document.createElement("button");
+    catDelBtn.className = "cat-btn del";
+    catDelBtn.setAttribute("aria-label","대분류 삭제");
+    catDelBtn.textContent = "✕";
+    catDelBtn.addEventListener("click", (e)=>{ e.stopPropagation(); deleteCategory(cat.id); });
+    actions.appendChild(catEditBtn);
+    actions.appendChild(catDelBtn);
+    right.appendChild(actions);
+
+    const chev = document.createElement("span");
+    chev.className = "cat-chev";
+    chev.textContent = "▾";
+    right.appendChild(chev);
+
+    head.appendChild(right);
     wrap.appendChild(head);
 
     const bar = document.createElement("div");
@@ -364,6 +411,57 @@ function commitAdd(catId, value){
   render();
 }
 
+function startEditCategory(catId){
+  const cat = state.find(c=>c.id===catId);
+  if(!cat) return;
+
+  render();
+  const container = document.getElementById("categories");
+  const catIndex = state.indexOf(cat);
+  const catEl = container.children[catIndex];
+  const titleWrap = catEl.querySelector(".cat-title");
+  const txtEl = titleWrap.querySelector(".txt");
+
+  const input = document.createElement("input");
+  input.className = "cat-title-input";
+  input.value = cat.title;
+  titleWrap.replaceChild(input, txtEl);
+  input.focus();
+  input.select();
+
+  function finish(doSave){
+    if(doSave){
+      const v = input.value.trim();
+      if(v) cat.title = v;
+    }
+    save();
+    render();
+  }
+  input.addEventListener("click", (e)=>e.stopPropagation());
+  input.addEventListener("keydown",(e)=>{
+    if(e.key==="Enter") finish(true);
+    if(e.key==="Escape") finish(false);
+  });
+  input.addEventListener("blur", ()=>finish(true));
+}
+
+function deleteCategory(catId){
+  const cat = state.find(c=>c.id===catId);
+  if(!cat) return;
+  if(!confirm(`"${cat.title}" 대분류와 그 안의 항목을 모두 삭제할까요?`)) return;
+  state = state.filter(c=>c.id!==catId);
+  save();
+  render();
+}
+
+function addCategory(title){
+  const text = title.trim();
+  if(!text) return;
+  state.push({ id: "cat-" + uid(), title: text, items: [] });
+  save();
+  render();
+}
+
 function startEdit(catId, itemId){
   const cat = state.find(c=>c.id===catId);
   const it = cat.items.find(x=>x.id===itemId);
@@ -443,6 +541,18 @@ document.getElementById("resetBtn").addEventListener("click", ()=>{
   state = buildInitialState();
   save();
   render();
+});
+
+document.getElementById("newCatBtn").addEventListener("click", ()=>{
+  const input = document.getElementById("newCatInput");
+  addCategory(input.value);
+  input.value = "";
+});
+document.getElementById("newCatInput").addEventListener("keydown",(e)=>{
+  if(e.key==="Enter"){
+    addCategory(e.target.value);
+    e.target.value = "";
+  }
 });
 
 load();
