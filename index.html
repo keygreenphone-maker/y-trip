@@ -165,7 +165,7 @@
 <script>
 const DEFAULT_DATA = [
   { id:"docs", title:"서류 · 예약 확인", items:[
-    "여권 3인 (이진실 · 양지성 · 양이슬) 유효기간 6개월 이상",
+    "여권 3인 (이진실 · 양지성 · 양이서) 유효기간 6개월 이상",
     "항공권 예약확정서 (하나투어 H8QYSQ)",
     "숙소 예약확정서 3건 (아쿠아선 ×2, 인터컨티넨탈)",
     "호핑투어 예약확정서 (트립온 11195A1271)",
@@ -207,7 +207,7 @@ const DEFAULT_DATA = [
     "귀중품용 방수 크로스백",
     "선글라스"
   ]},
-  { id:"kid", title:"양이슬(아이) 짐", items:[
+  { id:"kid", title:"양이서(아이) 짐", items:[
     "수영복 · 래시가드",
     "물놀이 튜브 · 암밴드",
     "여벌 속옷 · 옷",
@@ -402,11 +402,16 @@ function startEdit(catId, itemId){
 }
 
 async function save(){
+  const json = JSON.stringify(state);
   try{
     if(window.storage){
-      await window.storage.set(STORAGE_KEY, JSON.stringify(state), false);
+      await window.storage.set(STORAGE_KEY, json, false);
+      return;
     }
   }catch(e){ console.error("save failed", e); }
+  try{
+    localStorage.setItem(STORAGE_KEY, json);
+  }catch(e){ console.error("localStorage save failed", e); }
 }
 
 async function load(){
@@ -418,6 +423,14 @@ async function load(){
         render();
         return;
       }
+    }
+  }catch(e){}
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      state = JSON.parse(raw);
+      render();
+      return;
     }
   }catch(e){}
   state = buildInitialState();
