@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PHU QUOC 2026 · 여행 체크리스트</title>
+<style>
+  :root{
+    --sand:#F3EAD3;
+    --sand-deep:#EADFC0;
+    --paper:#FFFDF7;
+    --ink:#1B332D;
+    --ink-soft:#4A6058;
+    --teal:#1F7A6C;
+    --teal-deep:#124E45;
+    --coral:#D9603F;
+    --coral-deep:#9C3F26;
+    --line:#DCCFA6;
+    --line-strong:#C6B686;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--sand);
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
+    color:var(--ink);
+    padding:20px 14px 60px;
+  }
+  .wrap{max-width:520px;margin:0 auto;}
+
+  .pass{
+    display:flex;
+    background:var(--paper);
+    border-radius:14px;
+    overflow:hidden;
+    box-shadow:0 1px 0 var(--line-strong);
+    border:1px solid var(--line);
+    margin-bottom:18px;
+    position:relative;
+  }
+  .pass-main{ flex:1; padding:20px 18px; }
+  .pass-eyebrow{ font-size:11px; letter-spacing:.14em; color:var(--teal-deep); font-weight:600; margin:0 0 6px; }
+  .pass-route{ display:flex; align-items:baseline; gap:10px; margin:0 0 14px; }
+  .pass-city{ font-family:Georgia,"Noto Serif KR",serif; font-size:26px; font-weight:700; color:var(--ink); }
+  .pass-arrow{ color:var(--coral); font-size:15px; }
+  .pass-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px 16px; }
+  .pass-label{ font-size:10px; letter-spacing:.08em; color:var(--ink-soft); text-transform:uppercase; margin:0 0 2px; }
+  .pass-value{ font-family:"SFMono-Regular",Consolas,Menlo,monospace; font-size:13px; color:var(--ink); font-weight:600; }
+  .pass-stub{
+    width:108px; background:var(--teal); color:#fff;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:14px 10px; position:relative;
+  }
+  .pass-stub::before{
+    content:""; position:absolute; left:-7px; top:50%; transform:translateY(-50%);
+    width:14px; height:14px; background:var(--sand); border-radius:50%;
+  }
+  .pass-perf{
+    position:absolute; left:calc(100% - 108px - 1px); top:0; bottom:0;
+    border-left:1.5px dashed rgba(255,255,255,.55);
+  }
+  .pass-ring{
+    width:56px; height:56px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:700;
+    background:conic-gradient(#FFFFFF var(--pct,0%), rgba(255,255,255,.28) 0);
+    margin-bottom:8px;
+  }
+  .pass-ring-inner{ width:44px; height:44px; border-radius:50%; background:var(--teal); display:flex; align-items:center; justify-content:center; }
+  .pass-stub-label{ font-size:10px; letter-spacing:.06em; opacity:.9; }
+
+  .summary{ display:flex; justify-content:space-between; align-items:center; margin:0 2px 16px; font-size:12.5px; color:var(--ink-soft); }
+  .summary b{color:var(--ink);}
+  .reset-btn{
+    border:1px solid var(--line-strong); background:var(--paper); color:var(--ink-soft);
+    font-size:12px; padding:5px 10px; border-radius:8px; cursor:pointer;
+  }
+  .reset-btn:active{transform:scale(.97);}
+
+  .category{ background:var(--paper); border:1px solid var(--line); border-radius:12px; margin-bottom:12px; overflow:hidden; }
+  .cat-head{ display:flex; align-items:center; justify-content:space-between; padding:13px 15px; cursor:pointer; user-select:none; }
+  .cat-title{ display:flex; align-items:center; gap:9px; font-size:14.5px; font-weight:700; color:var(--ink); }
+  .cat-dot{ width:7px;height:7px;border-radius:50%; background:var(--coral); flex:none; }
+  .cat-count{ font-size:12px; color:var(--ink-soft); font-family:Consolas,Menlo,monospace; }
+  .cat-chev{ font-size:11px; color:var(--ink-soft); transition:transform .15s ease; }
+  .cat-head.open .cat-chev{transform:rotate(180deg);}
+
+  .cat-bar{ height:3px; background:var(--sand-deep); }
+  .cat-bar-fill{ height:100%; background:var(--teal); width:0%; transition:width .2s ease; }
+
+  .cat-items{ display:none; padding:4px 8px 6px; }
+  .cat-items.open{display:block;}
+
+  .item{ display:flex; align-items:center; gap:8px; padding:8px 6px; border-radius:8px; }
+  .item:hover{background:var(--sand);}
+  .checkbox{
+    width:20px;height:20px; border-radius:6px; border:1.5px solid var(--line-strong);
+    flex:none; display:flex; align-items:center; justify-content:center; background:var(--paper); cursor:pointer;
+  }
+  .checkbox.checked{ background:var(--teal); border-color:var(--teal); }
+  .checkbox svg{width:12px;height:12px;display:none;}
+  .checkbox.checked svg{display:block;}
+  .item-label{ flex:1; font-size:13.5px; color:var(--ink); line-height:1.4; cursor:text; padding:2px 0; }
+  .item-label.done{ color:var(--ink-soft); text-decoration:line-through; text-decoration-color:var(--line-strong); }
+  .item-label-input{
+    flex:1; font-size:13.5px; color:var(--ink); font-family:inherit; border:1px solid var(--teal);
+    border-radius:6px; padding:3px 6px; background:#fff;
+  }
+  .item-btn{
+    flex:none; width:24px; height:24px; border-radius:6px; border:none; background:transparent;
+    color:var(--ink-soft); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:14px;
+  }
+  .item-btn:hover{ background:var(--sand-deep); }
+  .item-btn.del:hover{ color:var(--coral-deep); }
+
+  .add-row{ display:flex; align-items:center; gap:8px; padding:8px 6px 10px; }
+  .add-input{
+    flex:1; font-size:13px; padding:7px 9px; border:1px dashed var(--line-strong); border-radius:8px;
+    background:var(--paper); color:var(--ink); font-family:inherit;
+  }
+  .add-btn{
+    flex:none; border:1px solid var(--teal); background:var(--teal); color:#fff; font-size:12px;
+    padding:7px 12px; border-radius:8px; cursor:pointer;
+  }
+  .add-btn:active{transform:scale(.97);}
+
+  .foot-note{ text-align:center; font-size:11px; color:var(--ink-soft); margin-top:22px; line-height:1.6; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="pass">
+    <div class="pass-perf"></div>
+    <div class="pass-main">
+      <p class="pass-eyebrow">FAMILY TRIP · 하나투어 H8QYSQ</p>
+      <div class="pass-route">
+        <span class="pass-city">ICN</span>
+        <span class="pass-arrow">✈ →</span>
+        <span class="pass-city">PQC</span>
+      </div>
+      <div class="pass-grid">
+        <div><p class="pass-label">출국</p><p class="pass-value">07.24 (금) 17:05</p></div>
+        <div><p class="pass-label">귀국</p><p class="pass-value">07.30 (목) 05:35</p></div>
+        <div><p class="pass-label">주차 입차</p><p class="pass-value">07.24 14:00</p></div>
+        <div><p class="pass-label">주차 출차</p><p class="pass-value">07.30 06:30</p></div>
+      </div>
+    </div>
+    <div class="pass-stub">
+      <div class="pass-ring" id="passRing"><div class="pass-ring-inner" id="passPct">0%</div></div>
+      <p class="pass-stub-label">준비율</p>
+    </div>
+  </div>
+
+  <div class="summary">
+    <span id="summaryText"><b>0</b> / 0 완료</span>
+    <button class="reset-btn" id="resetBtn">기본값으로 초기화</button>
+  </div>
+
+  <div id="categories"></div>
+
+  <p class="foot-note">항목을 눌러 텍스트를 바로 수정하거나, ✕ 로 삭제할 수 있어요.<br/>체크·수정 내용은 이 브라우저에 자동 저장돼요.<br/>제2여객터미널(T2) · 예약번호 6454HG0035</p>
+
+</div>
+
+<script>
+const DEFAULT_DATA = [
+  { id:"docs", title:"서류 · 예약 확인", items:[
+    "여권 3인 (이진실 · 양지성 · 양이슬) 유효기간 6개월 이상",
+    "항공권 예약확정서 (하나투어 H8QYSQ)",
+    "숙소 예약확정서 3건 (아쿠아선 ×2, 인터컨티넨탈)",
+    "호핑투어 예약확정서 (트립온 11195A1271)",
+    "공항 주차 예약확정서 (6454HG0035)",
+    "여행자보험 가입증서",
+    "신용카드 · 현금(달러/동화)"
+  ]},
+  { id:"dday", title:"출발 당일 (7/24)", items:[
+    "온라인 체크인 완료 (진에어)",
+    "집 가스 · 전기 · 창문 잠금 확인",
+    "주차장 입차 14:00 목표로 출발",
+    "액체류 100ml 이하 소분 확인"
+  ]},
+  { id:"electronics", title:"전자기기", items:[
+    "보조배터리 (기내 반입, 위탁 금지)",
+    "충전기 · 멀티탭",
+    "유심 또는 이심",
+    "카메라 · 방수케이스"
+  ]},
+  { id:"toiletries", title:"세면 · 위생용품 (공용)", items:[
+    "칫솔 · 치약 · 치실",
+    "선크림 · 애프터선 / 알로에젤",
+    "클렌징폼 · 헤어에센스",
+    "생리용품",
+    "렌즈 케이스 · 세정액"
+  ]},
+  { id:"health", title:"건강 · 상비약", items:[
+    "해열제 · 지사제 · 소화제",
+    "멀미약",
+    "모기기피제 · 물린 데 연고",
+    "상처밴드 · 소독약",
+    "개인 복용약"
+  ]},
+  { id:"dad", title:"양지성(아빠) 짐", items:[
+    "수영복 2벌",
+    "래시가드",
+    "면도기 · 데오드란트",
+    "슬리퍼 · 운동화",
+    "귀중품용 방수 크로스백",
+    "선글라스"
+  ]},
+  { id:"kid", title:"양이슬(아이) 짐", items:[
+    "수영복 · 래시가드",
+    "물놀이 튜브 · 암밴드",
+    "여벌 속옷 · 옷",
+    "아이 전용 상비약",
+    "유모차 (필요 시)",
+    "간식"
+  ]},
+  { id:"hopping", title:"호핑투어 데이 (7/26)", items:[
+    "방수 파우치",
+    "여벌 옷",
+    "멀미약 소지",
+    "물안경 (개인용 원할 시)",
+    "출발 전 선크림 재도포"
+  ]}
+];
+
+function buildInitialState(){
+  return DEFAULT_DATA.map(cat=>({
+    id: cat.id,
+    title: cat.title,
+    items: cat.items.map((label,i)=>({
+      id: cat.id + "-" + i + "-" + Date.now().toString(36) + Math.random().toString(36).slice(2,6),
+      label: label,
+      checked: false
+    }))
+  }));
+}
+
+const STORAGE_KEY = "pq-trip-checklist-2026-v2";
+let state = [];
+
+function totalCount(){ return state.reduce((s,c)=>s+c.items.length,0); }
+function doneCount(){ return state.reduce((s,c)=>s+c.items.filter(it=>it.checked).length,0); }
+
+function uid(){ return "it-" + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+function render(){
+  const container = document.getElementById("categories");
+  container.innerHTML = "";
+
+  state.forEach(cat=>{
+    const catDone = cat.items.filter(it=>it.checked).length;
+    const pct = cat.items.length ? Math.round((catDone/cat.items.length)*100) : 0;
+
+    const wrap = document.createElement("div");
+    wrap.className = "category";
+
+    const head = document.createElement("div");
+    head.className = "cat-head open";
+    head.innerHTML = `
+      <div class="cat-title"><span class="cat-dot"></span>${cat.title}</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="cat-count">${catDone}/${cat.items.length}</span>
+        <span class="cat-chev">▾</span>
+      </div>`;
+    wrap.appendChild(head);
+
+    const bar = document.createElement("div");
+    bar.className = "cat-bar";
+    const barFill = document.createElement("div");
+    barFill.className = "cat-bar-fill";
+    barFill.style.width = pct + "%";
+    bar.appendChild(barFill);
+    wrap.appendChild(bar);
+
+    const itemsWrap = document.createElement("div");
+    itemsWrap.className = "cat-items open";
+
+    cat.items.forEach(it=>{
+      const row = document.createElement("div");
+      row.className = "item";
+
+      const cb = document.createElement("div");
+      cb.className = "checkbox" + (it.checked ? " checked" : "");
+      cb.innerHTML = `<svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+      cb.addEventListener("click", ()=>{ it.checked = !it.checked; save(); render(); });
+      row.appendChild(cb);
+
+      const label = document.createElement("div");
+      label.className = "item-label" + (it.checked ? " done" : "");
+      label.textContent = it.label;
+      label.title = "눌러서 수정";
+      label.addEventListener("click", ()=> startEdit(cat.id, it.id));
+      row.appendChild(label);
+
+      const editBtn = document.createElement("button");
+      editBtn.className = "item-btn";
+      editBtn.setAttribute("aria-label","수정");
+      editBtn.textContent = "✎";
+      editBtn.addEventListener("click", ()=> startEdit(cat.id, it.id));
+      row.appendChild(editBtn);
+
+      const delBtn = document.createElement("button");
+      delBtn.className = "item-btn del";
+      delBtn.setAttribute("aria-label","삭제");
+      delBtn.textContent = "✕";
+      delBtn.addEventListener("click", ()=>{
+        cat.items = cat.items.filter(x=>x.id!==it.id);
+        save();
+        render();
+      });
+      row.appendChild(delBtn);
+
+      itemsWrap.appendChild(row);
+    });
+
+    const addRow = document.createElement("div");
+    addRow.className = "add-row";
+    const addInput = document.createElement("input");
+    addInput.className = "add-input";
+    addInput.placeholder = "새 항목 추가...";
+    addInput.addEventListener("keydown", (e)=>{
+      if(e.key === "Enter"){
+        commitAdd(cat.id, addInput.value);
+        addInput.value = "";
+      }
+    });
+    const addBtn = document.createElement("button");
+    addBtn.className = "add-btn";
+    addBtn.textContent = "추가";
+    addBtn.addEventListener("click", ()=>{
+      commitAdd(cat.id, addInput.value);
+      addInput.value = "";
+    });
+    addRow.appendChild(addInput);
+    addRow.appendChild(addBtn);
+    itemsWrap.appendChild(addRow);
+
+    wrap.appendChild(itemsWrap);
+
+    head.addEventListener("click", ()=>{
+      head.classList.toggle("open");
+      itemsWrap.classList.toggle("open");
+    });
+
+    container.appendChild(wrap);
+  });
+
+  const total = totalCount();
+  const done = doneCount();
+  const overallPct = total ? Math.round((done/total)*100) : 0;
+  document.getElementById("summaryText").innerHTML = `<b>${done}</b> / ${total} 완료`;
+  document.getElementById("passPct").textContent = overallPct + "%";
+  document.getElementById("passRing").style.setProperty("--pct", overallPct + "%");
+}
+
+function commitAdd(catId, value){
+  const text = value.trim();
+  if(!text) return;
+  const cat = state.find(c=>c.id===catId);
+  if(!cat) return;
+  cat.items.push({ id: uid(), label: text, checked:false });
+  save();
+  render();
+}
+
+function startEdit(catId, itemId){
+  const cat = state.find(c=>c.id===catId);
+  const it = cat.items.find(x=>x.id===itemId);
+  if(!it) return;
+
+  render();
+  const container = document.getElementById("categories");
+  const catIndex = state.indexOf(cat);
+  const catEl = container.children[catIndex];
+  const itemsWrap = catEl.querySelector(".cat-items");
+  const rows = itemsWrap.querySelectorAll(".item");
+  const itemIndex = cat.items.indexOf(it);
+  const row = rows[itemIndex];
+  const labelEl = row.querySelector(".item-label");
+
+  const input = document.createElement("input");
+  input.className = "item-label-input";
+  input.value = it.label;
+  row.replaceChild(input, labelEl);
+  input.focus();
+  input.select();
+
+  function finish(save_it){
+    if(save_it){
+      const v = input.value.trim();
+      if(v) it.label = v;
+    }
+    save();
+    render();
+  }
+  input.addEventListener("keydown",(e)=>{
+    if(e.key==="Enter") finish(true);
+    if(e.key==="Escape") finish(false);
+  });
+  input.addEventListener("blur", ()=>finish(true));
+}
+
+async function save(){
+  try{
+    if(window.storage){
+      await window.storage.set(STORAGE_KEY, JSON.stringify(state), false);
+    }
+  }catch(e){ console.error("save failed", e); }
+}
+
+async function load(){
+  try{
+    if(window.storage){
+      const res = await window.storage.get(STORAGE_KEY, false);
+      if(res && res.value){
+        state = JSON.parse(res.value);
+        render();
+        return;
+      }
+    }
+  }catch(e){}
+  state = buildInitialState();
+  save();
+  render();
+}
+
+document.getElementById("resetBtn").addEventListener("click", ()=>{
+  if(!confirm("모든 체크와 수정 내용을 기본값으로 되돌릴까요?")) return;
+  state = buildInitialState();
+  save();
+  render();
+});
+
+load();
+</script>
+</body>
+</html>
